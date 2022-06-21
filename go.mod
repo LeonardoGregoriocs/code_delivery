@@ -2,4 +2,7 @@ module github.com/LeonardoGregoriocs/code_delivery
 
 go 1.16
 
-require github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
+require (
+	github.com/confluentinc/confluent-kafka-go v1.8.2
+	github.com/joho/godotenv v1.4.0
+)
