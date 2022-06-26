@@ -11,7 +11,8 @@ export class RoutesService {
     @InjectModel(Route.name) private routeModel: Model<RouteDocument>,
   ) {}
 
-  create(createRouteDto: CreateRouteDto) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  create(_createRouteDto: CreateRouteDto) {
     return 'This action adds a new route';
   }
 
@@ -23,7 +24,8 @@ export class RoutesService {
     return `This action returns a #${id} route`;
   }
 
-  update(id: number, updateRouteDto: UpdateRouteDto) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  update(id: number, _updateRouteDto: UpdateRouteDto) {
     return `This action updates a #${id} route`;
   }
 
