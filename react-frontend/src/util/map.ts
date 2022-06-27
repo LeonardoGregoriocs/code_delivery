@@ -1,14 +1,53 @@
-export class Route {
-    public currentMarker: google.maps.Marker;
-    public endMarker: google.maps.Marker;
+import { RouteExistsError } from "../errors/route.exists.error";
 
-    constructor(options: {
-        currentMarkerOptions: google.maps.ReadonlyMarkerOptions;
-        endMarkerOptions: google.maps.ReadonlyMarkerOptions;
-    }) {
-        const { currentMarkerOptions, endMarkerOptions } = options;
-        this.currentMarker = new google.maps.Marker(currentMarkerOptions);
-        this.endMarker = new google.maps.Marker(endMarkerOptions);
+export class Route {
+  public currentMarker: google.maps.Marker;
+  public endMarker: google.maps.Marker;
+  private directionsRenderer: google.maps.DirectionsRenderer;
+
+  constructor(options: {
+    currentMarkerOptions: google.maps.ReadonlyMarkerOptions;
+    endMarkerOptions: google.maps.ReadonlyMarkerOptions;
+  }) {
+    const { currentMarkerOptions, endMarkerOptions } = options;
+    this.currentMarker = new google.maps.Marker(currentMarkerOptions);
+    this.endMarker = new google.maps.Marker(endMarkerOptions);
+
+    const strokeColor = (this.currentMarker.getIcon() as google.maps.ReadonlySymbol)
+      .strokeColor;
+    this.directionsRenderer = new google.maps.DirectionsRenderer({
+      suppressMarkers: true,
+      polylineOptions: {
+        strokeColor,
+        strokeOpacity: 0.5,
+        strokeWeight: 5,
+      },
+    });
+    this.directionsRenderer.setMap(
+      this.currentMarker.getMap() as google.maps.Map
+    );
+
+    this.calculateRoute();
+  }
+
+  private calculateRoute() {
+    const currentPosition = this.currentMarker.getPosition() as google.maps.LatLng;
+    const endPosition = this.endMarker.getPosition() as google.maps.LatLng;
+
+    new google.maps.DirectionsService().route(
+        {
+            origin: currentPosition,
+            destination: endPosition,
+            travelMode: google.maps.TravelMode.DRIVING,
+        }, (result, status) => {
+            if (status === "OK") {
+                this.directionsRenderer.setDirections(result);
+                return;
+            }
+
+            throw new Error(status);
+    }
+    );
     }
 }
 
@@ -17,20 +56,24 @@ export class Map {
     private routes: { [id: string]: Route } = {};
     constructor(element: Element, options: google.maps.MapOptions) {
         this.map = new google.maps.Map(element, options);
-    }
+}
 
     addRoute(
         id: string,
         routeOptions: {
-            currentMarkerOptions: google.maps.ReadonlyMarkerOptions;
-            endMarkerOptions: google.maps.ReadonlyMarkerOptions;
+        currentMarkerOptions: google.maps.ReadonlyMarkerOptions;
+        endMarkerOptions: google.maps.ReadonlyMarkerOptions;
         }
     ) {
+        if (id in this.routes) {
+        throw new RouteExistsError();
+        }
+
         const { currentMarkerOptions, endMarkerOptions } = routeOptions;
         this.routes[id] = new Route({
-            currentMarkerOptions: { ...currentMarkerOptions, map: this.map },
-            endMarkerOptions: { ...endMarkerOptions, map: this.map },
-    });
+        currentMarkerOptions: { ...currentMarkerOptions, map: this.map },
+        endMarkerOptions: { ...endMarkerOptions, map: this.map },
+        });
 
         this.fitBounds();
     }
@@ -39,9 +82,9 @@ export class Map {
         const bounds = new google.maps.LatLngBounds();
 
         Object.keys(this.routes).forEach((id: string) => {
-            const route = this.routes[id];
-            bounds.extend(route.currentMarker.getPosition() as any);
-            bounds.extend(route.endMarker.getPosition() as any);
+        const route = this.routes[id];
+        bounds.extend(route.currentMarker.getPosition() as any);
+        bounds.extend(route.endMarker.getPosition() as any);
         });
 
         this.map.fitBounds(bounds);
@@ -60,11 +103,11 @@ export const makeCarIcon = (color: string) => ({
 
 export const makeMarkerIcon = (color: string) => ({
     path:
-    "M66.9,41.8c0-11.3-9.1-20.4-20.4-20.4c-11.3,0-20.4,9.1-20.4,20.4c0,11.3,20.4,32.4,20.4,32.4S66.9,53.1,66.9,41.8z    M37,41.4c0-5.2,4.3-9.5,9.5-9.5c5.2,0,9.5,4.2,9.5,9.5c0,5.2-4.2,9.5-9.5,9.5C41.3,50.9,37,46.6,37,41.4z",
+        "M66.9,41.8c0-11.3-9.1-20.4-20.4-20.4c-11.3,0-20.4,9.1-20.4,20.4c0,11.3,20.4,32.4,20.4,32.4S66.9,53.1,66.9,41.8z    M37,41.4c0-5.2,4.3-9.5,9.5-9.5c5.2,0,9.5,4.2,9.5,9.5c0,5.2-4.2,9.5-9.5,9.5C41.3,50.9,37,46.6,37,41.4z",
     strokeColor: color,
     fillColor: color,
     strokeOpacity: 1,
     strokeWeight: 1,
     fillOpacity: 1,
     anchor: new google.maps.Point(46, 70),
-})
+});
