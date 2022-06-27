@@ -18,6 +18,15 @@ export class RoutesGateway implements OnModuleInit {
 
   @SubscribeMessage('new-direction')
   handleMessage(client: any, payload: any) {
+    // this.kafkaProducer.send({
+    //   topic: 'route.new-direction',
+    //   messages: [
+    //     {
+    //       key: 'route.new-direction',
+    //       value: JSON.stringify({ routeId: id, clientId: '' }),
+    //     },
+    //   ],
+    // });
     console.log(payload);
   }
 }
